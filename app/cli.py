@@ -1,84 +1,77 @@
-from app.process import DataCapture
-from app.exceptions import MissingValueError, CLIException
+from enum import Enum
 from pprint import pprint
+from typing import Type, Union
+
+from app.process import DataCapture, Stats
 
 
-def start_cli(args):
-    capture = DataCapture()
-    try:
-        if args.operation == 'add':
-            if args.value is None:
-                raise MissingValueError("Please provide a value to add.")
-            capture.add(args.value)
-            pprint(f"Added {args.value} to DataCapture.")
-        elif args.operation == 'stats':
-            stats = capture.build_stats()
-            if args.value is not None:
-                if args.value == 'less':
-                    result = stats['less'](args.value)
-                    pprint(f"Count of numbers less than {args.value}: {result}")
-                elif args.value == 'greater':
-                    result = stats['greater'](args.value)
-                    pprint(f"Count of numbers greater than {args.value}: {result}")
-                else:
-                    low, high = map(int, args.value.split(','))
-                    result = stats['between'](low, high)
-                    pprint(f"Count of numbers between {low} and {high}: {result}")
-    except CLIException as e:
-        pprint(f"CLI Error: {e}")
+class Args(Enum):
+    ADD = "add"
+    STATS = "stats"
+    LESS = "less"
+    GREATER = "greater"
+    BETWEEN = "between"
 
 
-def start_interactively():
+def _get_input(
+    prompt: str, value_type: Union[Type[int], Type[str]] = int
+) -> Union[str, int]:
     while True:
-        command = input("Enter command (add/stats): ")
-        if command == 'exit':
+        try:
+            user_input: str = input(prompt)
+            if user_input.lower() == "exit":
+                return "exit"
+
+            if value_type == int:
+                return int(user_input)
+            else:
+                return user_input.strip()
+
+        except ValueError:
+            pprint("Invalid input. Please enter a valid value.")
+
+
+def _process_add_command(capture: DataCapture):
+    value = _get_input("Enter value to add: ")
+    capture.add(value)
+    pprint(f"Added {value} to DataCapture.")
+
+
+def _process_stats_command(capture: DataCapture):
+    stats: Stats = capture.build_stats()
+    stat_type: str = _get_input("Enter stats type (less/greater/between): ", str)
+
+    if stat_type == Args.BETWEEN.value:
+        low: int = _get_input("Enter low value: ")
+        high: int = _get_input("Enter high value: ")
+        result: int = stats.between(low, high)
+        pprint(f"Count of numbers between {low} and {high}: {result}")
+    elif stat_type == Args.LESS.value:
+        value: int = _get_input("Enter value for less: ")
+        result: int = stats.less(value)
+        pprint(f"Count of numbers less than {value}: {result}")
+    elif stat_type == Args.GREATER.value:
+        value: int = _get_input("Enter value for greater: ")
+        result: int = stats.greater(value)
+        pprint(f"Count of numbers greater than {value}: {result}")
+    else:
+        pprint("Invalid command.")
+        _process_stats_command(capture)
+
+
+def start_cli():
+    # Call DataCapture Object
+    capture = DataCapture()
+
+    while True:
+        command: str = _get_input("Enter command (add/stats/exit): ", str)
+
+        if command == "exit":
             break
-        elif command not in ['add', 'stats']:
+        elif command == Args.ADD.value:
+            _process_add_command(capture)
+        elif command == Args.STATS.value:
+            _process_stats_command(capture)
+        else:
             pprint("Invalid command.")
             continue
-
-        value, low, high = None, None, None
-
-        if command == 'add':
-            value = int(input("Enter value to add: "))
-        elif command == 'stats':
-            stat_type = input("Enter stats type (less/greater/between): ")
-            if stat_type not in ['less', 'greater', 'between']:
-                pprint("Invalid stats type.")
-                continue
-            if stat_type == 'between':
-                low = int(input("Enter low value: "))
-                high = int(input("Enter high value: "))
-
-        capture = DataCapture()
-
-        try:
-            if command == 'add':
-                if value is None:
-                    raise MissingValueError("Please provide a value to add.")
-                capture.add(value)
-                pprint(f"Added {value} to DataCapture.")
-            elif command == 'stats':
-                stats = capture.build_stats()
-                if value is not None:
-                    if value == 'less':
-                        result = stats['less'](int(input("Enter value for less: ")))
-                        pprint(f"Count of numbers less than {value}: {result}")
-                    elif value == 'greater':
-                        result = stats['greater'](int(input("Enter value for greater: ")))
-                        pprint(f"Count of numbers greater than {value}: {result}")
-                    else:
-                        if low is None or high is None:
-                            raise MissingValueError("Please provide both low and high values for between.")
-                        result = stats['between'](int(low), int(high))
-                        pprint(f"Count of numbers between {low} and {high}: {result}")
-
-            again = input("Do you want try again ? [y,n]")
-
-            if again.lower() in ["yes", "y"]:
-                start_interactively()
-            else:
-                return
-
-        except CLIException as e:
-            pprint(f"CLI Error: {e}")

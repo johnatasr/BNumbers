@@ -1,24 +1,18 @@
-.PHONY: add_operation_with_valid_value add_operation_with_missing_value invalid_command invalid_argument test_all
+.PHONY: build_docker, run_docker, tests, run
 
-add_operation_with_valid_value:
-    @python main.py add --value 5
+build_docker:
+    docker build
 
-add_operation_with_missing_value:
-    @python your_script.py add
+run_docker:
+    docker run
 
-stats_operations:
-    @python your_script.py stats --value less --value 4
-    @python your_script.py stats --value between --value 3,6
-    @python your_script.py stats --value greater --value 4
+tests:
+    pytest
 
-invalid_command:
-    @python your_script.py invalid
+lint:
+    black app
+    isort app
 
-invalid_argument:
-    @python your_script.py add --value string
-
-test_all: add_operation_with_valid_value add_operation_with_missing_value invalid_command invalid_argument
-
-bnumbers:
-    @python main.py add --value string
+run:
+    @python main.py
 
