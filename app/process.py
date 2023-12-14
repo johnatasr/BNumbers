@@ -51,7 +51,7 @@ class Stats:
         """
         if not isinstance(value, (int, float)):
             raise StatsException("Invalid input: Value should be an integer or float.")
-        return sum(self.counts[value + 1:])
+        return sum(self.counts[value + 1 :])
 
     def between(self, low, high) -> int:
         """
@@ -72,7 +72,7 @@ class Stats:
             raise StatsException(
                 "Invalid input: Low value should be less than high value in 'between'."
             )
-        return sum(self.counts[low:high + 1])
+        return sum(self.counts[low : high + 1])
 
 
 class DataCapture:
@@ -94,10 +94,10 @@ class DataCapture:
 
     def add(self, num):
         """
-         Add a new number to the captured data.
+        Add a new number to the captured data.
 
-         Args:
-             num (int): The small positive integer to add.
+        Args:
+            num (int): The small positive integer to add.
         """
         if not isinstance(num, (int, float)):
             raise DataCaptureException(
@@ -112,9 +112,9 @@ class DataCapture:
 
     def build_stats(self) -> Stats:
         """
-         Build statistics object based on captured data.
+        Build statistics object based on captured data.
 
-         Returns:
-             Stats: A Stats object to query statistics about the captured data.
+        Returns:
+            Stats: A Stats object to query statistics about the captured data.
         """
         return Stats(self.data, self.counts)

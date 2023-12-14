@@ -13,9 +13,9 @@ tests:
 	pytest
 
 lint:
-	black app
-	isort app
 	flake8 app
+	isort app
+	black app
 
 run:
 	@python main.py
