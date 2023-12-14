@@ -27,7 +27,7 @@ def test_get_input_string(monkeypatch):
 def test_process_add_command(capture, monkeypatch):
     monkeypatch.setattr('builtins.input', lambda _: '10')
     _process_add_command(capture)
-    assert capture.numbers == [10]
+    assert capture.data == [10]
 
 
 @pytest.mark.parametrize(
@@ -35,11 +35,12 @@ def test_process_add_command(capture, monkeypatch):
     [
         (["less", "3"], "Count of numbers less than 3: 2"),
         (["greater", "3"], "Count of numbers greater than 3: 2"),
-        (["between", "2", "4"], "Count of numbers between 2 and 4: 1"),
+        (["between", "2", "4"], "Count of numbers between 2 and 4: 3"),
     ],
 )
 def test_process_stats_command(capture, monkeypatch, capsys, inputs, expected_output):
-    capture.numbers = [1, 2, 3, 4, 5]
+    for number in range(5):
+        capture.add(number + 1)
     monkeypatch.setattr('builtins.input', lambda _: inputs.pop(0))
     _process_stats_command(capture)
     captured = capsys.readouterr()
