@@ -1,4 +1,7 @@
+import pytest
+
 from app.process import DataCapture
+from app.exceptions import DataCaptureException
 
 
 def test_empty_stats():
@@ -21,16 +24,16 @@ def test_single_value_stats():
 
 
 def test_negative_numbers():
-    capture = DataCapture()
-    capture.add(-3)
-    capture.add(-1)
-    capture.add(0)
-    capture.add(2)
-    stats = capture.build_stats()
+    with pytest.raises(DataCaptureException) as exp:
+        capture = DataCapture()
+        capture.add(-3)
+        capture.add(-1)
+        capture.add(0)
+        capture.add(2)
+        stats = capture.build_stats()
+        stats.less(-2)
 
-    assert stats.less(-2) == 1
-    assert stats.between(-2, 1) == 2
-    assert stats.greater(1) == 1
+    assert str(exp.value) == "Invalid input: Only positive numbers are allowed."
 
 
 def test_repeated_values():

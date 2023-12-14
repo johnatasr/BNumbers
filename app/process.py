@@ -1,5 +1,3 @@
-from typing import List
-
 from app.exceptions import DataCaptureException, StatsException
 
 
@@ -16,52 +14,55 @@ class Stats:
     - between(low, high) -> int: Calculates the count of numbers between the given range.
     """
 
-    def __init__(self, capture):
+    def __init__(self, data, counts):
         """
-        Initializes Stats with the provided DataCapture object.
+        Initialize Stats object.
 
         Args:
-        - capture: DataCapture object containing the captured data.
+            data (list): The list of captured data.
+            counts (list): Counts of numbers in the captured data.
         """
-        self.capture = capture
+        self.data = data
+        self.counts = counts
 
     def less(self, value) -> int:
         """
-        Counts the numbers less than the provided value.
+        Get the count of numbers less than a specified value.
 
-        Raises:
-        - StatsException: If the value is not an integer or float.
+        Args:
+            value (int): The value to compare against.
 
         Returns:
-        - int: Count of numbers less than the provided value.
+            int: Count of numbers less than the specified value.
         """
         if not isinstance(value, (int, float)):
             raise StatsException("Invalid input: Value should be an integer or float.")
-        return sum(1 for num in self.capture.numbers if num < value)
+        return sum(self.counts[:value])
 
     def greater(self, value) -> int:
         """
-        Counts the numbers greater than the provided value.
+        Get the count of numbers greater than a specified value.
 
-        Raises:
-        - StatsException: If the value is not an integer or float.
+        Args:
+            value (int): The value to compare against.
 
         Returns:
-        - int: Count of numbers greater than the provided value.
+            int: Count of numbers greater than the specified value.
         """
         if not isinstance(value, (int, float)):
             raise StatsException("Invalid input: Value should be an integer or float.")
-        return sum(1 for num in self.capture.numbers if num > value)
+        return sum(self.counts[value + 1:])
 
     def between(self, low, high) -> int:
         """
-        Counts the numbers between the provided range.
+        Get the count of numbers within a specified range.
 
-        Raises:
-        - StatsException: If low or high values are not integers or floats or if low >= high.
+        Args:
+            low (int): The lower bound of the range (inclusive).
+            high (int): The upper bound of the range (inclusive).
 
         Returns:
-        - int: Count of numbers between the provided range.
+            int: Count of numbers within the specified range.
         """
         if not isinstance(low, (int, float)) or not isinstance(high, (int, float)):
             raise StatsException(
@@ -71,7 +72,7 @@ class Stats:
             raise StatsException(
                 "Invalid input: Low value should be less than high value in 'between'."
             )
-        return sum(1 for num in self.capture.numbers if low < num < high)
+        return sum(self.counts[low:high + 1])
 
 
 class DataCapture:
@@ -87,30 +88,33 @@ class DataCapture:
     """
 
     def __init__(self):
-        """Initializes DataCapture with an empty list to store numbers."""
-        self.numbers: List = []
+        """Initialize DataCapture object."""
+        self.data = []
+        self.counts = [0] * 1001
 
     def add(self, num):
         """
-        Adds a number to the captured data list.
+         Add a new number to the captured data.
 
-        Args:
-        - num: Number to be added to the captured data list.
-
-        Raises:
-        - DataCaptureException: If the provided input is not an integer or float.
+         Args:
+             num (int): The small positive integer to add.
         """
         if not isinstance(num, (int, float)):
             raise DataCaptureException(
                 "Invalid input: Only integers or floats are allowed."
             )
-        self.numbers.append(num)
+        if num < 0:
+            raise DataCaptureException(
+                "Invalid input: Only positive numbers are allowed."
+            )
+        self.data.append(num)
+        self.counts[num] += 1
 
     def build_stats(self) -> Stats:
         """
-        Creates and returns a Stats object for statistical operations.
+         Build statistics object based on captured data.
 
-        Returns:
-        - Stats: A Stats object initialized with the current DataCapture object.
+         Returns:
+             Stats: A Stats object to query statistics about the captured data.
         """
-        return Stats(self)
+        return Stats(self.data, self.counts)
