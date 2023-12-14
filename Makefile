@@ -1,18 +1,21 @@
-.PHONY: build_docker, run_docker, tests, run
+.PHONY: build_docker run_docker tests lint run
+
+IMAGE_NAME := bnumbers
+TAG := latest
 
 build_docker:
-    docker build
+	docker build -t $(IMAGE_NAME):$(TAG) .
 
 run_docker:
-    docker run
+	docker run -it $(IMAGE_NAME):$(TAG)
 
 tests:
-    pytest
+	pytest
 
 lint:
-    black app
-    isort app
+	black app
+	isort app
+	flake8 app
 
 run:
-    @python main.py
-
+	@python main.py

@@ -6,6 +6,17 @@ from app.process import DataCapture, Stats
 
 
 class Args(Enum):
+    """
+    Enumeration representing command options for the CLI.
+
+    Members:
+    - ADD: Represents the 'add' command.
+    - STATS: Represents the 'stats' command.
+    - LESS: Represents the 'less' command.
+    - GREATER: Represents the 'greater' command.
+    - BETWEEN: Represents the 'between' command.
+    """
+
     ADD = "add"
     STATS = "stats"
     LESS = "less"
@@ -16,6 +27,16 @@ class Args(Enum):
 def _get_input(
     prompt: str, value_type: Union[Type[int], Type[str]] = int
 ) -> Union[str, int]:
+    """
+    Get user input from the command line.
+
+    Args:
+    - prompt: A string prompt for the user.
+    - value_type: Type hint for the input value (int or str).
+
+    Returns:
+    - Union[str, int]: The input value, either as a string or integer.
+    """
     while True:
         try:
             user_input: str = input(prompt)
@@ -32,12 +53,28 @@ def _get_input(
 
 
 def _process_add_command(capture: DataCapture):
+    """
+    Process the 'add' command.
+
+    Adds a value to the DataCapture object.
+
+    Args:
+    - capture: DataCapture object to add the value to.
+    """
     value = _get_input("Enter value to add: ")
     capture.add(value)
     pprint(f"Added {value} to DataCapture.")
 
 
 def _process_stats_command(capture: DataCapture):
+    """
+    Process the 'stats' command.
+
+    Performs statistical operations based on user inputs.
+
+    Args:
+    - capture: DataCapture object to perform statistical operations on.
+    """
     stats: Stats = capture.build_stats()
     stat_type: str = _get_input("Enter stats type (less/greater/between): ", str)
 
@@ -55,11 +92,18 @@ def _process_stats_command(capture: DataCapture):
         result: int = stats.greater(value)
         pprint(f"Count of numbers greater than {value}: {result}")
     else:
-        pprint("Invalid command.")
+        pprint(f"Invalid command. {stat_type}")
         _process_stats_command(capture)
 
 
 def start_cli():
+    """
+    Start the Command Line Interface (CLI) application.
+
+    Allows users to interact with the DataCapture object by entering commands.
+    """
+    pprint("----- BNumbers CLI -------")
+
     # Call DataCapture Object
     capture = DataCapture()
 
