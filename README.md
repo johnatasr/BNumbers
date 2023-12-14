@@ -62,6 +62,17 @@ The project directory structure is organized as follows:
     make run_docker
    ```
 
+### Other commands
+
+1. **Run tests:**
+   ```bash
+    make tests
+   ```
+1. **Run lint:**
+   ```bash
+    make lint
+   ```
+
 ### Contributing
 
 
