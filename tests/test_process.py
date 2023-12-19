@@ -1,7 +1,7 @@
 import pytest
 
-from app.process import DataCapture
 from app.exceptions import DataCaptureException
+from app.process import DataCapture
 
 
 def test_empty_stats():
@@ -47,4 +47,3 @@ def test_repeated_values():
     assert stats.less(6) == 4
     assert stats.between(4, 6) == 4
     assert stats.greater(4) == 4
-

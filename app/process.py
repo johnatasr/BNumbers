@@ -1,3 +1,5 @@
+from typing import Union
+
 from app.exceptions import DataCaptureException, StatsException
 
 
@@ -14,55 +16,68 @@ class Stats:
     - between(low, high) -> int: Calculates the count of numbers between the given range.
     """
 
-    def __init__(self, data, counts):
+    def __init__(self, capture):
         """
-        Initialize Stats object.
+        Initialize the Stats object with precomputed cumulative counts.
 
         Args:
-            data (list): The list of captured data.
-            counts (list): Counts of numbers in the captured data.
+            capture (DataCapture): A DataCapture containing precomputed cumulative counts.
         """
-        self.data = data
-        self.counts = counts
+        self.capture = capture
 
-    def less(self, value) -> int:
+    def less(self, value: Union[int, float]) -> int:
         """
-        Get the count of numbers less than a specified value.
+        Calculates the count of numbers less than the given value.
 
         Args:
-            value (int): The value to compare against.
+            value (Union[int, float]): The value to compare against.
 
         Returns:
             int: Count of numbers less than the specified value.
+        Raises:
+            StatsException: If the value is not an integer or float or if an index error occurs.
         """
         if not isinstance(value, (int, float)):
             raise StatsException("Invalid input: Value should be an integer or float.")
-        return sum(self.counts[:value])
+        try:
+            return self.capture.prefix_sum[value + self.capture.offset]
+        except IndexError:
+            raise StatsException("An index error occurred in 'less' operation.")
 
-    def greater(self, value) -> int:
+    def greater(self, value: Union[int, float]) -> int:
         """
-        Get the count of numbers greater than a specified value.
+        Calculates the count of numbers greater than the given value.
 
         Args:
-            value (int): The value to compare against.
+            value (Union[int, float]): The value to compare against.
 
         Returns:
             int: Count of numbers greater than the specified value.
+        Raises:
+            StatsException: If the value is not an integer or float or if an index error occurs.
         """
         if not isinstance(value, (int, float)):
             raise StatsException("Invalid input: Value should be an integer or float.")
-        return sum(self.counts[value + 1 :])
+        try:
+            return (
+                self.capture.prefix_sum[2 * self.capture.offset]
+                - self.capture.prefix_sum[value + self.capture.offset + 1]
+            )
+        except IndexError:
+            raise StatsException("An index error occurred in 'greater'.")
 
-    def between(self, low, high) -> int:
+    def between(self, low: Union[int, float], high: Union[int, float]) -> int:
         """
-        Get the count of numbers within a specified range.
+        Calculates the count of numbers within a specified range.
 
         Args:
-            low (int): The lower bound of the range (inclusive).
-            high (int): The upper bound of the range (inclusive).
+            low (Union[int, float]): The lower bound of the range (inclusive).
+            high (Union[int, float]): The upper bound of the range (inclusive).
 
         Returns:
             int: Count of numbers within the specified range.
+        Raises:
+            StatsException: If low/high values are not integers or floats or if an index error occurs.
         """
         if not isinstance(low, (int, float)) or not isinstance(high, (int, float)):
             raise StatsException(
@@ -72,7 +87,13 @@ class Stats:
             raise StatsException(
                 "Invalid input: Low value should be less than high value in 'between'."
             )
-        return sum(self.counts[low : high + 1])
+        try:
+            return (
+                self.capture.prefix_sum[high + self.capture.offset + 1]
+                - self.capture.prefix_sum[low + self.capture.offset]
+            )
+        except IndexError:
+            raise StatsException("An index error occurred in 'between'.")
 
 
 class DataCapture:
@@ -88,16 +109,22 @@ class DataCapture:
     """
 
     def __init__(self):
-        """Initialize DataCapture object."""
-        self.data = []
-        self.counts = [0] * 1001
-
-    def add(self, num):
         """
-        Add a new number to the captured data.
+        Initialize the DataCapture object with counts for captured numbers. Allowed only numbers to 1000
+        """
+        self.prefix_sum = None
+        self.offset = 1000
+        self.data = [0] * (2 * self.offset)
+
+    def add(self, num: Union[int, float]):
+        """
+        Adds a new number to the captured data.
 
         Args:
-            num (int): The small positive integer to add.
+            num (Union[int, float]): The small positive integer to add.
+        Raises:
+            DataCaptureException: If the number is not an integer or float.
+            DataCaptureException: If the number is not positive.
         """
         if not isinstance(num, (int, float)):
             raise DataCaptureException(
@@ -107,14 +134,16 @@ class DataCapture:
             raise DataCaptureException(
                 "Invalid input: Only positive numbers are allowed."
             )
-        self.data.append(num)
-        self.counts[num] += 1
+        self.data[num + self.offset] += 1
 
     def build_stats(self) -> Stats:
         """
-        Build statistics object based on captured data.
+        Builds a Stats object for statistical operations.
 
         Returns:
-            Stats: A Stats object to query statistics about the captured data.
+            Stats: A Stats object for querying statistics about the captured data.
         """
-        return Stats(self.data, self.counts)
+        self.prefix_sum = [0] * (2 * self.offset + 1)
+        for i in range(1, 2 * self.offset + 1):
+            self.prefix_sum[i] = self.prefix_sum[i - 1] + self.data[i - 1]
+        return Stats(self)
